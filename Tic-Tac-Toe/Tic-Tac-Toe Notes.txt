@@ -1,0 +1,108 @@
+Tic-Tac-Toe Notes
+-----------------
+
+Initial bug found
+
+#define TO_INDEX - 1
+Problem:
+Macro is used in construct 
+player.get_player_move()[0])) - TO_INDEX
+
+It appears the intent is to adjust from user input row/column starting at 1,
+to internal array representation starting at 0
+However the adjustment expands to
+player.get_player_move()[0])) - - 1
+
+Which ends up adding the adjustment.
+
+Solution:
+It seems to make more sense defining the adjustment as an addition of -1
+Further, best practice is to enclose macros in parentheses to prevent unwanted expansions
+
+Hence
+#define TO_INDEX (-1)
+
+and adjust by
+player.get_player_move()[0])) + TO_INDEX
+
+Similarly, for the row coordinate.
+
+Further Commentary
+------------------
+Could replace the #define macros by const int expressions.
+or could simply ignore the adjustment entirely, and use a slightly larger internal board
+and make row 0 and col 0 unused
+(Would have to add more checks on board range)
+
+Win detection
+=============
+It was observed that win was not detected for rows 2 and 3, and for columns 2 and 3
+
+Looking art win detection code, both row and column 
+
+Column uses
+board[0][i]
+
+Row uses
+board[i][0]
+
+So only (internal)row 0 and (internal) col 0 are ever tested.
+
+Easiest fix is to add for the other rows and columns
+Thus:
+// For every row
+for (int row = 0; row < 2; row++)
+	for (int i = 0; i < 3; ++i) {
+		if (this->board[row][i] != player.get_marker()) {
+			break;
+... etc
+
+and same for additional columns
+
+Further commentary
+------------------
+There's probably a more succinct way to determine a win
+
+Add feature to give hint (See hint requiremrnt)
+
+Add feature for time limit (see requirement)
+Added as in-line check on time limit not as immediate check.
+This means the player is only informed when they have made a move, not immediately the time requireent is exceeded.
+This still fulfils the instruction "..player ... should automatically lose the game"
+(Translated in requirement to shall)
+
+Unit Testing
+============
+Unit test is_winner()
+Create board,
+directly assign marker in winning arrangements for player 1
+verify is_winner() reports true
+verify for other configurations that is_winner() reports false
+Difficult to get every possible marker combination for non-winning configurations
+
+Repeat for player 2
+
+Unit test is_tie()
+Create board
+verify is_tie() reports false
+Fill completely
+verify is_tie() reports true
+Clear board
+Set all except middle square
+verify is_tie() reports false
+
+
+Code analysis
+=============
+
+1) Mention use of () parentheses in macros
+2) Mention use of const int in place of macros
+3) Mention use of variable naming (e.g. use of i for column index)
+4) Remove text output and input from the player and board classes. They should be completely contained.
+Text output should be done in main (here, since its a simple application)
+Had to make this change for the is_winner() method, since I wanted to use it for the hint determineation as well.
+
+
+Enhancements
+============
+Add real-time checking of time limit, complete with countdown timer
