@@ -37,9 +37,12 @@ int main() {
 		getline(cin, name);
 		cout << name << "'s marker is " << marker << endl;
 
-		cout << "Enter player " << player_number << "'s time limit (s): ";
 		std::string limit;
-		getline(cin, limit);
+		while (limit.length() < 1)
+		{
+			cout << "Enter player " << player_number << "'s time limit (s): ";
+			getline(cin, limit);
+		}
 		time_limit = stoi(limit);
 		cout << name << "'s time limit is " << time_limit << "s" << endl;
 

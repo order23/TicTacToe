@@ -13,10 +13,14 @@ void Test_is_winner()
 	Test_player(p);
 }
 
+// Test winning/not winning combinations for a player
 void Test_player(Player p)
 {
 	// Create board
 	Board b;
+
+	// Empty board should be non winning
+	_ASSERT(!b.is_winner(p));
 
 	// Horizontal check all rows
 	for (int r = 1; r < 4; r++)

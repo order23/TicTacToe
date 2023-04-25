@@ -1,0 +1,148 @@
+Tic-Tac-Toe Notes
+=================
+
+Bugs
+----
+
+Bug 1 - Input row/column are not interpreted/used correctly
+
+#define TO_INDEX - 1
+Problem:
+Macro is used in construct 
+player.get_player_move()[0])) - TO_INDEX
+
+It appears the intent is to adjust from player input row/column starting at 1,
+to internal array representation starting at 0
+However the adjustment expands to
+player.get_player_move()[0])) - - 1
+
+Which ends up adding the adjustment.
+
+Solution:
+It seems to make more sense defining the adjustment as an addition of -1
+Further, best practice is to enclose macros in parentheses to prevent unwanted expansions
+
+Hence
+#define TO_INDEX (-1)
+
+and adjust by
+player.get_player_move()[0])) + TO_INDEX
+
+Similarly, for the row coordinate.
+
+Further Commentary
+------------------
+Could replace the #define macros by const int expressions.
+or could simply ignore the adjustment entirely, and use a slightly larger internal board
+and make row 0 and col 0 unused
+(Would have to add more checks on board range)
+
+Bug 2 - Win detection is incomplete
+It was observed that win was not detected for rows 2 and 3, and for columns 2 and 3
+Looking at win detection code, both row and column 
+
+Column uses
+board[0][i]
+
+Row uses
+board[i][0]
+
+So only (internal)row 0 and (internal) col 0 are ever tested.
+
+Easiest fix is to add for the other rows and columns
+Thus:
+// For every row
+for (int row = 0; row < 2; row++)
+	for (int i = 0; i < 3; ++i) {
+		if (this->board[row][i] != player.get_marker()) {
+			break;
+... etc
+
+and same for additional columns
+
+Further commentary
+------------------
+There's probably a more succinct way to determine a win
+
+Add Feature Hint
+----------------
+Add feature to give hint (See hint requirement)
+Added Board::hint() method, added hint_row and hint_col members to store hint values
+Made hint values public so they can be retrieved for printout.
+Fill in empty squares with players marker, then check for a winning position.
+If one is found, print out the coordinates, if no win, clear square and try next empty square until all squares are considered.
+Removed text output from is_winner() so it can be used to determine winning positions without extraneous text output.
+
+Add feature time limit
+----------------------
+Add feature for time limit (see time limit requirement(s))
+
+Added as in-line check on time limit not as immediate check.
+This means the player is only informed when they have made a move, not immediately the time requireent is exceeded.
+This still fulfils the instruction "..player ... should automatically lose the game"
+(Translated in requirement to shall)
+
+Added time limit field to player class (initialised at start of game)
+Reset timer immediately before player is given move prompt
+Test time difference when player has input a valid move
+Difference is calculated in seconds and compared with player time limit
+If time limit is exceeded, set boolean timed_out
+
+Before printing new board after player has made a move, check if time limit is exceeded.
+If time limit is exceeded, print a message showing player has lost.
+
+
+Unit Testing
+============
+Unit tests are just added as separate methods and called in main
+
+Unit test Board::is_winner()
+Method Test_is_winner()
+ - Create board
+ - Verify is_winner() reports false
+ - Directly assign marker in winning arrangements for player 1
+ - Verify is_winner() reports true
+ - Verify for other configurations that is_winner() reports false
+ - Difficult to get every possible marker combination for non-winning configurations
+
+Repeat for player 2
+
+Unit test Board::is_tie()
+Method Test_is_tie()
+ - Create board
+ - Verify is_tie() reports false
+ - Fill completely
+ - Verify is_tie() reports true
+ - Clear board
+ - Set all except middle square
+ - Verify is_tie() reports false
+
+TBD Add more configurations
+
+In order to create unit tests, it was necessary to remove user input from Player class construction.
+This was replaced with external prompting for the player informaation, followed by and explicit Player::set_info() step to add player information to the player.
+Also removed text output from is_tie() to prevent extraneous output. Text output was already removed from is_winner() for the hint feature addition.
+Added Board::set_move() to allow a board to be constructed automatically in the unit tests
+Added Board::clear_board() to reset the boarad for differing tests
+
+Code analysis
+=============
+
+1) Mention use of () parentheses in macros
+2) Mention use of const int in place of macros
+3) Mention use of variable naming (e.g. use of i for column index)
+4) Remove text output and input from the player and board classes. They should be completely contained.
+Text output should be done in main (here, since its a simple application)
+Had to make this change for the is_winner() method, since I wanted to use it for the hint determination as well.
+Same with is_tie() to use in unit tests. Also had to remove user input from Player construction for use in unit test
+5) Keep line lengths short. No lines disappearing off the page.
+
+Enhancements
+============
+Add real-time checking of time limit, complete with countdown timer for each player
+Player1 - Player2 execution refactor to cut down on duplicated code
+Add column, row input instruction to player move prompt. (It was unclear if row or column was first)
+Improve player move input so it's not so restrictive
+Improve player info input to be more robust
+
+
